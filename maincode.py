@@ -237,11 +237,12 @@ def conv_net(x, keep_prob):
     # Function Definition from Above:
     #    conv2d_maxpool(x_tensor, conv_num_outputs, conv_ksize, conv_strides, pool_ksize, pool_strides)
     img = normalize(x)
+    # print("image:", img.shape)
     conv = conv2d_maxpool(img, 4, [3,3], [1,1], [2,2], [2,2])
     conv = tf.nn.dropout(conv, keep_prob)
-    conv = conv2d_maxpool(conv, 7, [3,3], [1,1], [2,2], [2,2])
-    conv = tf.nn.dropout(conv, keep_prob)
-    conv = conv2d_maxpool(conv, 10, [3,3], [1,1], [2,2], [2,2])
+    # conv = conv2d_maxpool(conv, 7, [3,3], [1,1], [2,2], [2,2])
+    # conv = tf.nn.dropout(conv, keep_prob)
+    # conv = conv2d_maxpool(conv, 10, [3,3], [1,1], [2,2], [2,2])
     # output: 4*4*20
 
     # TODO: Apply a Flatten Layer
@@ -254,12 +255,12 @@ def conv_net(x, keep_prob):
     #    Play around with different number of outputs
     # Function Definition from Above:
     #   fully_conn(x_tensor, num_outputs)
-    conv = fully_conn(conv, int(int(conv.shape[1])/3.5))
+    # conv = fully_conn(conv, int(int(conv.shape[1])/3.5))
+    # print(conv.shape)
+    # conv = fully_conn(conv, int(int(conv.shape[1])/3.0))
+    # print(conv.shape)
+    conv = fully_conn(conv, int(int(conv.shape[1])/20))
     print(conv.shape)
-    conv = fully_conn(conv, int(int(conv.shape[1])/3.0))
-    print(conv.shape)
-    #conv = fully_conn(conv, int(int(conv.shape[1])/1.35))
-    #print(conv.shape)
 
     # TODO: Apply an Output Layer
     #    Set this to the number of classes
@@ -314,7 +315,7 @@ def train_neural_network(session, optimizer, keep_probability, feature_batch, la
     : label_batch: Batch of Numpy label data
     """
     # TODO: Implement Function
-    print(label_batch.shape)
+    # print('label_batch:', label_batch.shape)
     x = neural_net_image_input(feature_batch.shape[1:])
     y = neural_net_label_input(label_batch.shape[1])
     keep_prob = neural_net_keep_prob_input()
@@ -333,7 +334,8 @@ def train_neural_network(session, optimizer, keep_probability, feature_batch, la
     session.run(init)
     print('cost nn:', session.run(cost, feed_dict = {x: feature_batch, y: label_batch, keep_prob: keep_probability}))
     session.run(optimizer0, feed_dict = {x: feature_batch, y: label_batch, keep_prob: keep_probability})
-    print("feature sizes:" ,batch_features.shape, batch_labels.shape, "valid sizes:", valid_features.shape, valid_labels.shape)
+    print("feature sizes:", batch_features.shape, batch_labels.shape, "valid sizes:", valid_features.shape, valid_labels.shape)
+    print('label:', batch_labels[0])
     #print('After: ', session.run(cost, feed_dict = {x: feature_batch, y: label_batch, keep_prob: keep_probability}))
     print('trainning nn')
 
@@ -356,17 +358,17 @@ def print_stats(session, feature_batch, label_batch, cost, accuracy):
     : accuracy: TensorFlow accuracy function
     """
     # TODO: Implement Function
+    print("printing state")
     loss = session.run(cost, feed_dict={x: feature_batch, y:label_batch,  keep_prob: keep_probability})
-    acc = session.run(accuracy, feed_dict={x: valid_features, y:valid_labels, keep_prob: keep_probability})
-    print("feature sizes:" ,feature_batch.shape, label_batch.shape, "valid sizes:", valid_features.shape, valid_labels.shape)
+    acc = session.run(accuracy, feed_dict={x: valid_features, y:valid_labels, keep_prob: keep_probability})  #???
     print("cost/loss:  ", loss)
     print("accuracy:   ", acc)
+
     pass
 
 
-
 # TODO: Tune Parameters
-epochs = 1
+epochs = 50
 batch_size = 1
 keep_probability = 0.95
 
@@ -378,13 +380,15 @@ with tf.Session() as sess:
     # Initializing the variables
     sess.run(tf.global_variables_initializer())
 
-    print("batch_size", batch_size)
     #print("feature sizes:" ,batch_features.shape, batch_labels.shape, "valid sizes:", valid_features.shape, valid_labels.shape)
 
     # Training cycle
     for epoch in range(epochs):
         batch_i = 1
+        nncount = 0
         for batch_features, batch_labels in helper.load_preprocess_training_batch(batch_i, batch_size):
             train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
+            nncount += 1
+            print('nncount:',nncount)
         print('Epoch {:>2}, CIFAR-10 Batch {}:  '.format(epoch + 1, batch_i), end='')
         print_stats(sess, batch_features, batch_labels, cost, accuracy)
